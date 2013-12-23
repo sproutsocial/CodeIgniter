@@ -122,6 +122,9 @@ class CI_DB_driver {
 			if ($this->db_debug)
 			{
 				$this->display_error('db_unable_to_connect');
+			} else {
+				throw new Exception("Unable to connect to the service");
+				
 			}
 			return FALSE;
 		}
@@ -447,7 +450,10 @@ class CI_DB_driver {
 	{
 		if ( ! $this->conn_id)
 		{
-			$this->initialize();
+			// Returning false when a connection cannot be made (which probably threw an error);
+			if(!$this->initialize()) {
+				return FALSE;
+			}
 		}
 
 		return $this->_execute($sql);
