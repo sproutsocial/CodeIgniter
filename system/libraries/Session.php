@@ -39,6 +39,7 @@ class CI_Session {
 	var $cookie_domain				= '';
 	var $cookie_secure				= FALSE;
 	var $sess_time_to_update		= 300;
+	var $cookie_httponly			= FALSE;
 	var $encryption_key				= '';
 	var $flashdata_key				= 'flash';
 	var $time_reference				= 'time';
@@ -62,7 +63,7 @@ class CI_Session {
 
 		// Set all the session preferences, which can either be set
 		// manually via the $params array above or via the config file
-		foreach (array('sess_encrypt_cookie', 'sess_use_database', 'sess_table_name', 'sess_expiration', 'sess_expire_on_close', 'sess_match_ip', 'sess_match_useragent', 'sess_cookie_name', 'cookie_path', 'cookie_domain', 'cookie_secure', 'sess_time_to_update', 'time_reference', 'cookie_prefix', 'encryption_key') as $key)
+		foreach (array('sess_encrypt_cookie', 'sess_use_database', 'sess_table_name', 'sess_expiration', 'sess_expire_on_close', 'sess_match_ip', 'sess_match_useragent', 'sess_cookie_name', 'cookie_path', 'cookie_domain', 'cookie_secure', 'sess_time_to_update', 'time_reference', 'cookie_prefix', 'encryption_key', 'cookie_httponly') as $key)
 		{
 			$this->$key = (isset($params[$key])) ? $params[$key] : $this->CI->config->item($key);
 		}
@@ -314,9 +315,9 @@ class CI_Session {
 		$sessid .= $this->CI->input->ip_address();
 
 		$this->userdata = array(
-							'session_id'	=> md5(uniqid($sessid, TRUE)),
-							'ip_address'	=> $this->CI->input->ip_address(),
-							'user_agent'	=> substr($this->CI->input->user_agent(), 0, 120),
+							'session_id'	=> substr(md5($sessid,0,8),
+							// 'ip_address'	=> $this->CI->input->ip_address(),
+							// 'user_agent'	=> substr($this->CI->input->user_agent(), 0, 120),
 							'last_activity'	=> $this->now,
 							'user_data'		=> ''
 							);
@@ -659,7 +660,7 @@ class CI_Session {
 		else
 		{
 			// if encryption is not used, we provide an md5 hash to prevent userside tampering
-			$cookie_data = $cookie_data.md5($cookie_data.$this->encryption_key);
+			$cookie_data = $cookie_data.substr(md5($cookie_data.$this->encryption_key),0,8);
 		}
 
 		$expire = ($this->sess_expire_on_close === TRUE) ? 0 : $this->sess_expiration + time();
@@ -671,7 +672,8 @@ class CI_Session {
 					$expire,
 					$this->cookie_path,
 					$this->cookie_domain,
-					$this->cookie_secure
+					$this->cookie_secure,
+					$this->cookie_httponly
 				);
 	}
 
